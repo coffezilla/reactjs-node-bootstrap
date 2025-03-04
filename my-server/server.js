@@ -12,6 +12,10 @@ const cors = require("cors");
 app.use(bodyParser.json());
 app.use(cors());
 
+// Auth
+const routeAuth = require("./routes/auth");
+app.use("/auth", routeAuth);
+
 // Users
 const routeUsers = require("./routes/users");
 app.use("/users", routeUsers);
