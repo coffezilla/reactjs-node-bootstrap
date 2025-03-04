@@ -9,7 +9,6 @@ const useResponseErrors = () => {
 		} else if (error.request) {
 			// The request was made but no response was received
 			if (error.request?.status === 0) {
-				console.log("pass");
 			} else {
 				logoutAuth();
 			}

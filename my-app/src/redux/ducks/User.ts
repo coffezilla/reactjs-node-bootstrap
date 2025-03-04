@@ -14,8 +14,8 @@ const userSlice = createSlice({
 	name: "localdata",
 	initialState: INITIAL_STATE,
 	reducers: {
-		rdxChangePreferenceTheme(state: IRdxUser, action: PayloadAction<IRdxUser["preferences"]["theme"]>) {
-			state.preferences.theme = action.payload;
+		rdxChangePreferenceData(state: IRdxUser, action: PayloadAction<IRdxUser["preferences"]>) {
+			state.preferences.theme = action.payload.theme;
 		},
 		rdxChangeUserData(state: IRdxUser, action: PayloadAction<IRdxUser["user"]>) {
 			state.user.name = action.payload.name;
@@ -25,7 +25,7 @@ const userSlice = createSlice({
 });
 
 // EXPORT ACTIONS
-export const { rdxChangePreferenceTheme, rdxChangeUserData } = userSlice.actions;
+export const { rdxChangePreferenceData, rdxChangeUserData } = userSlice.actions;
 
 // EXPORT REDUCER
 export default userSlice.reducer;

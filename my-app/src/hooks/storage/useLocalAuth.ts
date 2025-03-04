@@ -18,7 +18,7 @@ const useLocalAuth = () => {
 
 	const [isLocalStorageLoaded, setIsLocalStorageLoaded] = useState(false);
 
-	// init
+	// INIT
 	const initLocalStorage = () => {
 		if (hasLocalStorage) {
 			setUserAuth(getLocalStorage(LOCAL_STORAGE_AUTH));
@@ -28,7 +28,7 @@ const useLocalAuth = () => {
 		}
 	};
 
-	// set
+	// SET DEFAULT
 	const setLocalStorageToDefault = () => {
 		setLocalStorage(LOCAL_STORAGE_AUTH, {
 			auth: {},
@@ -36,6 +36,9 @@ const useLocalAuth = () => {
 		setUserAuth(getLocalStorage(LOCAL_STORAGE_AUTH));
 	};
 
+	// UPDATE DEFAULT REDUX
+
+	// ACTIONS
 	const updateAuthData = (option: any) => {
 		setLocalStorage(LOCAL_STORAGE_AUTH, {
 			auth: {
@@ -48,11 +51,7 @@ const useLocalAuth = () => {
 		setUserAuth(getLocalStorage(LOCAL_STORAGE_AUTH));
 	};
 
-	useEffect(() => {
-		initLocalStorage();
-	}, []);
-
-	return { isLocalStorageLoaded, updateAuthData, userAuth };
+	return { initLocalStorage, isLocalStorageLoaded, updateAuthData, userAuth };
 };
 
 export default useLocalAuth;
