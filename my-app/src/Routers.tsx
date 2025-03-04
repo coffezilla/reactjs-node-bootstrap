@@ -17,15 +17,21 @@ import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import UnPrivateRoute from "./UnPrivateRoute.tsx";
 import PrivateRoute from "./PrivateRoute.tsx";
+import useLocalPreferences from "./hooks/storage/useLocalPreferences.ts";
+import useLocalAuth from "./hooks/storage/useLocalAuth.ts";
 
 const App = () => {
-	const { isLoadingGet, checkAuths, isAuthenticated } = useAuth();
+	const { isLoadingGet: isLoadingGetCheckAuth, checkAuths, isAuthenticated } = useAuth();
+	const { initLocalStorage: initLocalStoragePreferences } = useLocalPreferences();
+	const { initLocalStorage: initLocalStorageAuth } = useLocalAuth();
 
 	useEffect(() => {
+		initLocalStoragePreferences();
+		initLocalStorageAuth();
 		checkAuths();
 	}, []);
 
-	if (isLoadingGet) {
+	if (isLoadingGetCheckAuth) {
 		return <LoadingPage />;
 	}
 

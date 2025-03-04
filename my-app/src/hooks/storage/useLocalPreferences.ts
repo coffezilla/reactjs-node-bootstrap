@@ -3,11 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import useLocalStorage from "./useLocalStorage";
 import { LOCAL_STORAGE_PREFERENCES } from "../../helpers/constants";
-import {
-	rdxChangePreferenceFilterbar,
-	rdxChangePreferenceSidebar,
-	rdxChangePreferenceTableColumnsExcluded,
-} from "../../redux/ducks/User";
+import { rdxChangePreferenceData } from "../../redux/ducks/User";
 import { IReduxUser } from "../../redux/ducks/User.types";
 
 const useLocalPreferences = () => {
@@ -16,12 +12,11 @@ const useLocalPreferences = () => {
 
 	const dispatch = useDispatch();
 
-	const rdxUser = useSelector((state: IReduxUser) => state.localdata.preferences);
-	const userPreferences = rdxUser;
-
+	const rdxPreferences = useSelector((state: IReduxUser) => state.localdata.preferences);
+	const userPreferences = rdxPreferences;
 	const [isLocalStorageLoaded, setIsLocalStorageLoaded] = useState(false);
 
-	// init
+	// INIT
 	const initLocalStorage = () => {
 		if (hasLocalStorage) {
 			updateReduxWithLocalStorage(localStorageData);
@@ -31,60 +26,41 @@ const useLocalPreferences = () => {
 		}
 	};
 
-	// set
+	// SET DEFAULT
 	const setLocalStorageToDefault = () => {
 		setLocalStorage(LOCAL_STORAGE_PREFERENCES, {
 			preferences: {
 				theme: "light",
-				sidebar: true,
-				filterbar: true,
-				tableColumnsExcluded: [],
 			},
 		});
 	};
 
+	// UPDATE DEFAULT REDUX
 	const updateReduxWithLocalStorage = (localStorageData: IReduxUser["user"]) => {
-		dispatch(rdxChangePreferenceFilterbar(localStorageData.preferences.filterbar));
-		dispatch(rdxChangePreferenceSidebar(localStorageData.preferences.sidebar));
-		dispatch(rdxChangePreferenceTableColumnsExcluded(localStorageData.preferences.tableColumnsExcluded));
+		// updating redux when setting the localstorage
+		dispatch(rdxChangePreferenceData(localStorageData.preferences));
 		setIsLocalStorageLoaded(true);
 	};
 
-	const updateFilterbar = (option: any) => {
-		dispatch(rdxChangePreferenceFilterbar(option));
+	// ACTIONS
+	const updateTheme = (option: any) => {
+		dispatch(rdxChangePreferenceData({ theme: option }));
+
+		// update localstorage when updating redux
 		setLocalStorage(LOCAL_STORAGE_PREFERENCES, {
 			preferences: {
 				...localStorageData.preferences,
-				filterbar: option,
+				theme: option,
 			},
 		});
 	};
 
-	const updateSidebar = (option: any) => {
-		dispatch(rdxChangePreferenceSidebar(option));
-		setLocalStorage(LOCAL_STORAGE_PREFERENCES, {
-			preferences: {
-				...localStorageData.preferences,
-				sidebar: option,
-			},
-		});
+	return {
+		initLocalStorage,
+		isLocalStorageLoaded,
+		updateTheme,
+		userPreferences,
 	};
-
-	const updateTableColumns = (option: any) => {
-		dispatch(rdxChangePreferenceTableColumnsExcluded(option));
-		setLocalStorage(LOCAL_STORAGE_PREFERENCES, {
-			preferences: {
-				...localStorageData.preferences,
-				tableColumnsExcluded: option,
-			},
-		});
-	};
-
-	useEffect(() => {
-		initLocalStorage();
-	}, []);
-
-	return { isLocalStorageLoaded, updateFilterbar, updateSidebar, updateTableColumns, userPreferences };
 };
 
 export default useLocalPreferences;

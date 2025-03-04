@@ -7,9 +7,14 @@ import { LOCAL_STORAGE_AUTH } from "../../../helpers/constants";
 // Custom Hooks
 import useLocalStorage from "../../storage/useLocalStorage";
 import useLocalAuth from "../../storage/useLocalAuth";
-import useLocalMyData from "../../storage/useLocalMyData";
-import useToast from "../../components/useToast/useToast";
-import { getAuthsService, postAuthService } from "../../../services/authService/authService";
+import useLocalMyData from "../../storage/useLocalUser";
+import {
+	getCheckTokenService,
+	postLoginService,
+	postRecoveryService,
+	storeUserService,
+} from "../../../services/authService/authService";
+import useLocalUser from "../../storage/useLocalUser";
 
 const useAuth = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -17,70 +22,33 @@ const useAuth = () => {
 	const [isLoadingPost, setIsLoadingPost] = useState<boolean>(false);
 
 	const { getLocalStorage } = useLocalStorage();
-	const { updateUserData } = useLocalMyData();
+	const { updateUserData } = useLocalUser();
 	const { updateAuthData } = useLocalAuth();
-	const { showToast } = useToast();
 
 	const localStorageAuth = getLocalStorage(LOCAL_STORAGE_AUTH);
 
 	// check auth
 	const checkAuths = useCallback(() => {
-		const hasLocalStorageToken = localStorageAuth.data.auth.token && true;
+		const hasLocalStorageToken = localStorageAuth?.data?.auth?.token;
 		if (hasLocalStorageToken) {
-			showToast({
-				id: "default",
-				message: "Authenticating...",
-				type: "loading",
-			});
-
-			getAuthsService({ email: localStorageAuth.data.auth.email })
+			getCheckTokenService({ email: localStorageAuth.data.auth.email })
 				.then((response) => {
 					if (response) {
 						if (response.status === 200) {
-							if (response.data.error) {
-								showToast({
-									id: "default",
-									message: "Auth error",
-									type: "error",
-									duration: 1000,
-								});
-							} else {
-								// update redux locally
-								updateUserData({
-									id: response.data.id,
-									name: response.data.name,
-									email: response.data.email,
-								});
+							// update redux locally
+							updateUserData({
+								id: response.data.data.result.id,
+								name: response.data.data.result.name,
+								email: response.data.data.result.email,
+							});
 
-								setIsAuthenticated(true);
-							}
-						}
-						if (response.status === 500) {
-							showToast({
-								id: "default",
-								message: "Auth error",
-								type: "error",
-								duration: 500,
-							});
-						}
-						if (response.status === 400) {
-							showToast({
-								id: "default",
-								message: "Auth error",
-								type: "error",
-								duration: 500,
-							});
+							setIsAuthenticated(true);
 						}
 					}
 				})
 				.catch((error: AxiosError) => {
 					if (error.response) {
-						showToast({
-							id: "default",
-							message: "Auth error",
-							type: "error",
-							duration: 500,
-						});
+						logoutAuth();
 					}
 				})
 				.finally(() => {
@@ -94,41 +62,105 @@ const useAuth = () => {
 	// login
 	const loginAuth = async (data: { email: string; password: string }) => {
 		let responseAuth = {
-			status: 0,
 			data: {},
+			status: 0,
 		};
 
 		setIsLoadingPost(true);
-		await postAuthService(data)
+		await postLoginService(data)
 			.then((response) => {
-				setIsLoadingPost(false);
-				if (response.status === 401) {
-					responseAuth = {
-						data: response.data,
-						status: response.status,
-					};
-				} else {
-					responseAuth = {
-						data: response.data,
-						status: response.status,
-					};
+				responseAuth = {
+					data: response.data.data,
+					status: response.status,
+				};
 
+				if (response.status === 200) {
 					// update local storage
 					updateAuthData({
-						token: response.data.result.token,
-						email: response.data.result.email,
-						timestamp: response.data.result.timestamp,
+						token: response.data.data.result.token,
+						email: response.data.data.result.email,
+						timestamp: response.data.data.result.timestamp,
 					});
 				}
 			})
 			.catch((error: AxiosError) => {
-				setIsLoadingPost(false);
+				logoutAuth();
 				if (error.response) {
 					responseAuth = {
 						...responseAuth,
-						status: error.response.status,
+						status: error.status,
+						data: {
+							message: error.message,
+						},
 					};
 				}
+			})
+			.finally(() => {
+				setIsLoadingPost(false);
+			});
+		return responseAuth;
+	};
+
+	// register
+	const registerAuth = async (data: { email: string; password: string; name: string }) => {
+		let responseAuth = {
+			data: {},
+			status: 0,
+		};
+
+		setIsLoadingPost(true);
+		await storeUserService(data)
+			.then((response) => {
+				responseAuth = {
+					data: response.data.data,
+					status: response.status,
+				};
+			})
+			.catch((error: AxiosError) => {
+				if (error.response) {
+					responseAuth = {
+						...responseAuth,
+						status: error.status,
+						data: {
+							message: error.message,
+						},
+					};
+				}
+			})
+			.finally(() => {
+				setIsLoadingPost(false);
+			});
+		return responseAuth;
+	};
+
+	// recovery
+	const recoveryAuth = async (data: { email: string }) => {
+		let responseAuth = {
+			data: {},
+			status: 0,
+		};
+
+		setIsLoadingPost(true);
+		await postRecoveryService(data)
+			.then((response) => {
+				responseAuth = {
+					data: response.data.data,
+					status: response.status,
+				};
+			})
+			.catch((error: AxiosError) => {
+				if (error.response) {
+					responseAuth = {
+						...responseAuth,
+						status: error.status,
+						data: {
+							message: error.message,
+						},
+					};
+				}
+			})
+			.finally(() => {
+				setIsLoadingPost(false);
 			});
 		return responseAuth;
 	};
@@ -140,11 +172,8 @@ const useAuth = () => {
 		};
 
 		// update local storage
-		updateAuthData({
-			token: "",
-			id: "",
-			timestamp: "",
-		});
+		updateAuthData({});
+		updateUserData({});
 
 		window.location.href = "/login";
 		return responseAuth;
@@ -157,6 +186,8 @@ const useAuth = () => {
 		checkAuths,
 		loginAuth,
 		logoutAuth,
+		recoveryAuth,
+		registerAuth,
 	};
 };
 
