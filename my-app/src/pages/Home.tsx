@@ -14,6 +14,7 @@ const Home = () => {
 
 	const handleLogout = () => {
 		logoutAuth().then((response) => {
+			window.location.href = "/login";
 			console.log("logout: ", response);
 		});
 	};

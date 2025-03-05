@@ -175,7 +175,6 @@ const useAuth = () => {
 		updateAuthData({});
 		updateUserData({});
 
-		window.location.href = "/login";
 		return responseAuth;
 	};
 
