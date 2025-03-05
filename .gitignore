@@ -32,3 +32,6 @@ cypress/log/*
 cypress/screenshots/*
 cypress/downloads/*
 
+# database
+database.db
+
